@@ -55,6 +55,15 @@ void make2PlayerView(){
         (uint8_t *)"DROP", LEFT_MODE);
     // kraj pisanja za drop
     
+    // pocetak dugmeta pause
+    BSP_LCD_SetTextColor(LCD_COLOR_BLUE);
+    BSP_LCD_FillCircle(220, 20, 10);
+    BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
+    BSP_LCD_DrawCircle(220, 20, 10);
+    BSP_LCD_FillRect(215, 15, 5, 10);
+    BSP_LCD_FillRect(222, 15, 5, 10);
+    // kraj dugmeta
+    
     // početak ploče za igranje
     BSP_LCD_SetTextColor(LCD_COLOR_BLUE);
     BSP_LCD_FillRect(20, 45, 195, 150);
@@ -73,33 +82,29 @@ void make2PlayerView(){
     
     // player1
     BSP_LCD_SetTextColor(LCD_COLOR_YELLOW);
-    BSP_LCD_FillCircle(10, BSP_LCD_GetYSize() - 40, 5);
-    BSP_LCD_FillRect(10 - 3, BSP_LCD_GetYSize()  - 40, 7, 20);
-    BSP_LCD_FillRect(10 + 3, BSP_LCD_GetYSize()  - 36, 4, 10);
-    BSP_LCD_FillRect(10 - 6, BSP_LCD_GetYSize()  - 36, 4, 10);
+    BSP_LCD_FillCircle(15, BSP_LCD_GetYSize() - 30, 5);
+    BSP_LCD_FillRect(15 - 3, BSP_LCD_GetYSize()  - 30, 7, 20);
+    BSP_LCD_FillRect(15 + 3, BSP_LCD_GetYSize()  - 26, 4, 10);
+    BSP_LCD_FillRect(15 - 6, BSP_LCD_GetYSize()  - 26, 4, 10);
     BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
     BSP_LCD_SetBackColor(LCD_COLOR_DARKBLUE);
     BSP_LCD_SetFont(&Font12);
-    BSP_LCD_DisplayStringAt(20, BSP_LCD_GetYSize() - 35,
+    BSP_LCD_DisplayStringAt(25, BSP_LCD_GetYSize() - 25,
         (uint8_t *)"PLAYER 1", LEFT_MODE);
-    BSP_LCD_DisplayStringAt(10, BSP_LCD_GetYSize() - 15,
-        (uint8_t *)"Score: ", LEFT_MODE);
     // kraj player1
     
     // player2 - racunar
     BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
-    BSP_LCD_FillRect(214, BSP_LCD_GetYSize()  - 25, 15, 3);
+    BSP_LCD_FillRect(214, BSP_LCD_GetYSize()  - 15, 15, 3);
     BSP_LCD_SetTextColor(LCD_COLOR_RED);
-    BSP_LCD_FillRect(210, BSP_LCD_GetYSize()  - 43, 23, 18);
+    BSP_LCD_FillRect(210, BSP_LCD_GetYSize()  - 33, 23, 18);
     BSP_LCD_SetTextColor(LCD_COLOR_BLACK);
-    BSP_LCD_FillRect(212, BSP_LCD_GetYSize()  - 41, 19, 14);
+    BSP_LCD_FillRect(212, BSP_LCD_GetYSize()  - 31, 19, 14);
     BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
     BSP_LCD_SetBackColor(LCD_COLOR_DARKBLUE);
     BSP_LCD_SetFont(&Font12);
-    BSP_LCD_DisplayStringAt(185, BSP_LCD_GetYSize() - 35,
+    BSP_LCD_DisplayStringAt(185, BSP_LCD_GetYSize() - 25,
         (uint8_t *)"BOT", LEFT_MODE);
-    BSP_LCD_DisplayStringAt(185, BSP_LCD_GetYSize() - 15,
-        (uint8_t *)" :Score", LEFT_MODE);
     // kraj player2
     
     // pocetak strelice koja obiljezava ko igra
