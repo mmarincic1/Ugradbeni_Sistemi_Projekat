@@ -1,0 +1,86 @@
+#include "mbed.h"
+#include "stm32f413h_discovery_ts.h"
+#include "stm32f413h_discovery_lcd.h"
+#define PI 4 * atan(1)
+
+TS_StateTypeDef TS_State = { 0 };
+int trenutniView = 0;
+
+void winnerView(int player){
+    // pozadina, elipsa i text u njoj
+    BSP_LCD_SetTextColor(LCD_COLOR_DARKBLUE);
+    BSP_LCD_FillRect(0, 0, 	BSP_LCD_GetXSize(), BSP_LCD_GetYSize());
+    //natpis winner
+    BSP_LCD_SetTextColor(LCD_COLOR_BLUE);
+    BSP_LCD_FillRect(0, 0, BSP_LCD_GetXSize(), 30);
+    BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+    BSP_LCD_SetBackColor(LCD_COLOR_BLUE);
+    BSP_LCD_SetFont(&Font20);
+    BSP_LCD_DisplayStringAt(0, 10, (uint8_t *)"WINNER", CENTER_MODE);
+    //player elipsa
+    BSP_LCD_SetBackColor(LCD_COLOR_DARKBLUE);
+    BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+    BSP_LCD_SetFont(&Font20);
+    if(player == 1)
+    BSP_LCD_DisplayStringAt(BSP_LCD_GetXSize()/2-50, BSP_LCD_GetYSize()/2,
+        (uint8_t *)"PLAYER 1", LEFT_MODE);
+        else BSP_LCD_DisplayStringAt(BSP_LCD_GetXSize()/2-50, BSP_LCD_GetYSize()/2,
+        (uint8_t *)"PLAYER 2", LEFT_MODE);
+    int boja = 0;
+    auto color = LCD_COLOR_RED;
+    for(int i = BSP_LCD_GetXSize()-50; i >0; i -= 20){
+        if(boja == 0){
+            color = LCD_COLOR_RED;
+            boja++;
+        }
+        else if(boja == 1){
+            color = LCD_COLOR_GREEN;
+            boja++;
+        }
+        else if(boja == 2){
+            color = LCD_COLOR_YELLOW;
+            boja++;
+        }
+        else if(boja == 3){
+            color = LCD_COLOR_CYAN;
+            boja=0;
+        }
+        for(double j = 0; j < PI; j += PI/100){
+            
+            int x1 = BSP_LCD_GetXSize() / 2 + j*50;
+            int x2 = BSP_LCD_GetXSize() / 2 - j*50;
+            int y = BSP_LCD_GetYSize() - (int)(sin(j) * i);
+            BSP_LCD_DrawPixel(x1,y, color);
+            BSP_LCD_DrawPixel(x1,y+1, color);
+            BSP_LCD_DrawPixel(x2,y, color);
+            BSP_LCD_DrawPixel(x2,y+1, color);
+            wait_ms(10);
+        }
+    }
+}
+
+bool single_pressed(int x1, int y1){
+    if(x1 >BSP_LCD_GetXSize()/5 - 3 + 40 && x1 < BSP_LCD_GetXSize()/5 - 3 + 130 && y1 > BSP_LCD_GetYSize()/3 && y1 < BSP_LCD_GetYSize()/3 + 25){
+        return true;
+    }
+    return false;
+}
+
+bool multi_pressed(int x1, int y1){
+    if(x1 >BSP_LCD_GetXSize()/5 - 3 + 40 && x1 < BSP_LCD_GetXSize()/5 - 3 + 130 && y1 > BSP_LCD_GetYSize()/3 + 60 && y1 < BSP_LCD_GetYSize()/3 + 85)
+    return true;
+    return false;
+}
+
+
+// kod za prvobitni izgled ekrana
+int main() {
+    
+    
+  
+    winnerView(1);
+     while (1) {
+         
+            wait_ms(10);
+        }
+}
