@@ -36,6 +36,7 @@ public:
         slots = s;
     }
     void makeTheBoard(){
+    player = StateOfSlot::YELLOW;
     VectorOfSlots v;
     for(int i = 0; i < 6; i++){
         std::vector<Slot> forInsert;
@@ -519,7 +520,7 @@ int main() {
                     trenutniView = prosliView;
                    if(trenutniView == 1)
                         make1PlayerView();
-                      else make2PlayerView();
+                    else make2PlayerView();
                       playingBoard.updateView();
               }
               else if(RestartPressed(x1, y1)){
