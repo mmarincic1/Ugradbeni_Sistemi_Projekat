@@ -2,10 +2,31 @@
 #include "stm32f413h_discovery_ts.h"
 #include "stm32f413h_discovery_lcd.h"
 #include "vector"
+#define PI 4 * atan(1)
 
 enum StateOfSlot { NOTTAKEN, YELLOW, RED }; 
 
+TS_StateTypeDef TS_State = { 0 };
+int viewNow = 0;
+int pastView = 0;
+void makeHomeView();
+bool housePressed(int x1, int y1);
+
 StateOfSlot player = StateOfSlot::YELLOW;
+
+void homeButton(){
+    BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+    BSP_LCD_DrawCircle(220, 20, 12);
+    BSP_LCD_FillRect(215, 18, 12, 8);
+    Point p[3]; // trougao sa 3 vrha
+	    p[0].X = 212; 
+	    p[1].X = 221; 
+	    p[2].X = 229;
+	    p[0].Y = 18;
+	    p[1].Y = 12;
+	    p[2].Y = 18;
+	    BSP_LCD_FillPolygon(p, 3);
+}
 
 class Slot{
     int xKoord, yKoord;
@@ -81,6 +102,15 @@ public:
             wait_ms(100);
         }
         slots.at(index).at(column).changeState(player);
+        if(endGame()){
+            viewNow = 4;
+                if(player == StateOfSlot::YELLOW) winnerView(1);
+                else winnerView(2);
+        }
+        else if(drawGame()){
+            viewNow = 4;
+            winnerView(3);
+        }
         if(player == StateOfSlot::YELLOW)
             player = StateOfSlot::RED;
         else player = StateOfSlot::YELLOW;
@@ -108,14 +138,204 @@ public:
         }
     }
     bool endGame(){
-        // TODO
+        //horizontalno provjeravanje 4 u nizu
+        for(int i = 0; i< slots.size(); i++){
+            int horiz = 0;
+            for(int j = 0; j < slots.at(0).size(); j++)
+            if(slots.at(i).at(j).getState() != player) horiz = 0;
+            else{
+                horiz++;
+                if(horiz == 4) return true;
+            }
+        }
+        
+        //vertikalno provjeravanje 4 u nizu
+        for(int i = 0; i< slots.at(0).size(); i++){
+            int vert = 0;
+            for(int j = 0; j < slots.size(); j++)
+            if(slots.at(j).at(i).getState() != player) vert = 0;
+            else{
+                vert++;
+                if(vert == 4) return true;
+            }
+        }
+        //provjera po dijagonalama
+        for(int i = 0; i< slots.size(); i++){
+            for(int j = 0; j < slots.at(0).size(); j++){
+                if(slots.at(i).at(j).getState() != player) continue;
+                int ima = 1;
+                int i1 = i, j1 = j;
+                //krece se prema dole desno
+                while(i1 != 5 && j1 != 6){
+                    i1++;
+                    j1++;
+                    if(i1 == 6 || j1 == 7) {
+                        ima = 1;
+                        break;
+                    }
+                    if(slots.at(i1).at(j1).getState() != player){
+                        ima = 1;
+                        break;
+                    } 
+                    else{
+                        ima++;
+                        if(ima == 4) return true;
+                    }
+                }
+                //krece se prema dole lijevo
+                ima = 1;
+                i1 = i; j1 = j;
+                while(i1 != 5 && j1 != 0){
+                    i1++;
+                    j1--;
+                    if(i1 == 6 || j1 == -1) {
+                        ima = 1;
+                        break;
+                    }
+                    if(slots.at(i1).at(j1).getState() != player){
+                        ima = 1;
+                        break;
+                    } 
+                    else{
+                        ima++;
+                        if(ima == 4) return true;
+                    }
+                }
+                //gore desno
+                ima = 1;
+                i1 = i; j1 = j;
+                while(i1 != 0 && j1 != 6){
+                    i1--;
+                    j1++;
+                    if(i1 == -1 || j1 == 7) {
+                        ima = 1;
+                        break;
+                    }
+                    if(slots.at(i1).at(j1).getState() != player){
+                        ima = 1;
+                        break;
+                    } 
+                    else{
+                        ima++;
+                        if(ima == 4) return true;
+                    }
+                }
+                //gore lijevo
+                ima = 1;
+                i1 = i; j1 = j;
+                while(i1 != 0 && j1 != 0){
+                    i1--;
+                    j1--;
+                    if(i1 == -1 || j1 == -1) {
+                        ima = 1;
+                        break;
+                    }
+                    if(slots.at(i1).at(j1).getState() != player){
+                        ima = 1;
+                        break;
+                    } 
+                    else{
+                        ima++;
+                        if(ima == 4) return true;
+                    }
+                }
+            }
+            
+        }
+        
+        return false;
+    }
+    bool drawGame(){
+        for(int i = 0; i < slots.size(); i++)
+            for(int j = 0; j < slots.at(i).size(); j++)
+                if(slots.at(i).at(j).getState() == StateOfSlot::NOTTAKEN)
+                    return false;
+        return true;
+    }
+    void winnerView(int player){
+        viewNow = 4;
+    // pozadina, elipsa i text u njoj
+    BSP_LCD_SetTextColor(LCD_COLOR_DARKBLUE);
+    BSP_LCD_FillRect(0, 0, 	BSP_LCD_GetXSize(), BSP_LCD_GetYSize());
+    //natpis winner
+    BSP_LCD_SetTextColor(LCD_COLOR_BLUE);
+    BSP_LCD_FillRect(0, 0, BSP_LCD_GetXSize(), 40);
+    BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+    BSP_LCD_SetBackColor(LCD_COLOR_BLUE);
+    BSP_LCD_SetFont(&Font20);
+    BSP_LCD_DisplayStringAt(0, 15, (uint8_t *)"WINNER", CENTER_MODE);
+    //player natpis
+    BSP_LCD_SetBackColor(LCD_COLOR_DARKBLUE);
+    BSP_LCD_SetTextColor(LCD_COLOR_WHITE);
+    BSP_LCD_SetFont(&Font20);
+    if(player == 1)
+    BSP_LCD_DisplayStringAt(BSP_LCD_GetXSize()/2-50, BSP_LCD_GetYSize()/2,
+        (uint8_t *)"PLAYER 1", LEFT_MODE);
+    else if(player == 2) BSP_LCD_DisplayStringAt(BSP_LCD_GetXSize()/2-50, BSP_LCD_GetYSize()/2,
+        (uint8_t *)"PLAYER 2", LEFT_MODE);
+    else BSP_LCD_DisplayStringAt(BSP_LCD_GetXSize()/2-50, BSP_LCD_GetYSize()/2,
+        (uint8_t *)"DRAW :(", LEFT_MODE);     
+     homeButton();
+     //vatromet
+    int boja = 0;
+    auto color = LCD_COLOR_RED;
+    for(int i = BSP_LCD_GetXSize()-50; i >0; i -= 20){
+        if(boja == 0){
+            color = LCD_COLOR_RED;
+            boja++;
+        }
+        else if(boja == 1){
+            color = LCD_COLOR_GREEN;
+            boja++;
+        }
+        else if(boja == 2){
+            color = LCD_COLOR_YELLOW;
+            boja++;
+        }
+        else if(boja == 3){
+            color = LCD_COLOR_CYAN;
+            boja=0;
+        }
+        for(double j = 0; j < PI; j += PI/100){
+            
+            int x1 = BSP_LCD_GetXSize() / 2 + j*50;
+            int x2 = BSP_LCD_GetXSize() / 2 - j*50;
+            int y = BSP_LCD_GetYSize() - (int)(sin(j) * i);
+            BSP_LCD_DrawPixel(x1,y, color);
+            BSP_LCD_DrawPixel(x1,y+1, color);
+            BSP_LCD_DrawPixel(x2,y, color);
+            BSP_LCD_DrawPixel(x2,y+1, color);
+            //provjera za kliknut home
+            BSP_TS_GetState(&TS_State);
+        if(TS_State.touchDetected) {
+            //ako je dodirnut ekran
+            //dohvacamo koordinate
+            uint16_t x1 = TS_State.touchX[0];
+            uint16_t y1 = TS_State.touchY[0];
+            if(housePressed(x1,y1)){
+                    BSP_LCD_Clear(LCD_COLOR_DARKBLUE);
+                    makeTheBoard();
+                    makeHomeView();
+                    pastView = 4;
+                    viewNow = 0;
+                    return;
+                }
+        }
+            
+            wait_ms(10);
+        }
+    }
+}
+    void playBot(){
+        int column;
+        do{
+            column = 1 + (rand() % 6);
+        }while(column == -1);
+        
+        int row = findFirstAvailableSlot(column);
+        insertCoin(column, row);
     }
 };
-
-
-TS_StateTypeDef TS_State = { 0 };
-int trenutniView = 0;
-int prosliView = 0;
 
 void pointToPlayer(int player){
     int pomX = BSP_LCD_GetXSize()/2;
@@ -220,6 +440,8 @@ void make1PlayerView(){
     // kraj player2
     
     // pocetak strelice koja obiljezava ko igra
+    if(pastView == 4)
+        player = StateOfSlot::YELLOW;
     if(player == StateOfSlot::YELLOW)
         pointToPlayer(1); // prima int kao parametar, 1 - PLAYER1 ili 2 - PLAYER2
     else pointToPlayer(2);
@@ -295,7 +517,8 @@ void make2PlayerView(){
     BSP_LCD_DisplayStringAt(165, BSP_LCD_GetYSize() - 25,
         (uint8_t *)"PLAYER 2", LEFT_MODE);
     // kraj player2
-    
+    if(pastView == 4)
+        player = StateOfSlot::YELLOW;
    if(player == StateOfSlot::YELLOW)
         pointToPlayer(1); // prima int kao parametar, 1 - PLAYER1 ili 2 - PLAYER2
     else pointToPlayer(2);
@@ -411,6 +634,12 @@ bool pausePressed(int x1, int y1){
     return false;
 }
 
+bool housePressed(int x1, int y1){
+    if(x1 >= 208 && x1 < 232 && y1 >= 8 && y1 <= 32)
+        return true;
+    return false;
+}
+
 bool homePressed(int x1, int y1){
     if(x1 >= BSP_LCD_GetXSize()/2 - 55 && x1 <= BSP_LCD_GetXSize()/2 - 55 + 115 &&
         y1 >= 180 && y1 <= 180 + 30)
@@ -447,7 +676,6 @@ int columnInserted(int x1, int y1){
     return -1;
 }
 
-// kod za prvobitni izgled ekrana
 int main() {
     
     // pravim sve slotove i na pocetku su slobodni
@@ -468,27 +696,27 @@ int main() {
             //dohvacamo koordinate
             uint16_t x1 = TS_State.touchX[0];
             uint16_t y1 = TS_State.touchY[0];
-            if(trenutniView == 0){
+            if(viewNow == 0){
                 if(single_pressed(x1,y1)){
                     BSP_LCD_Clear(LCD_COLOR_DARKBLUE);
-                    trenutniView = 1;
-                    prosliView = 0;
+                    viewNow = 1;
                     make1PlayerView();
+                    pastView = 0;
                 }
                 else if(multi_pressed(x1,y1)){
                     BSP_LCD_Clear(LCD_COLOR_DARKBLUE);
-                    trenutniView = 2;
-                    prosliView = 0;
+                    viewNow = 2;
                     make2PlayerView();
+                    pastView = 0;
                 }
                 
             }
-            else if(trenutniView == 1 || trenutniView == 2){
+            else if(viewNow == 1 || viewNow == 2){
               // znaci da smo na igracem view i moze pauza
               if(pausePressed(x1, y1)){
                 BSP_LCD_Clear(LCD_COLOR_DARKBLUE);
-                prosliView = trenutniView;
-                trenutniView = 3;
+                pastView = viewNow;
+                viewNow = 3;
                 onPausePressed();
               }
               int column = columnInserted(x1, y1);
@@ -498,39 +726,58 @@ int main() {
                   // moramo provjeriti u koji index ubacujemo i onda ga crtamo
                   if(indexInColumn >= 0 && indexInColumn <= 5){
                       playingBoard.insertCoin(column, indexInColumn);
-                      // ENDGAME
-                      if(trenutniView == 1)
-                        make1PlayerView();
-                      else make2PlayerView();
-                      playingBoard.updateView();
+                      if(viewNow == 1){
+                          make1PlayerView();
+                          playingBoard.updateView();
+                          wait(0.2);
+                          playingBoard.playBot(); // bot igra
+                          if(viewNow == 1){ // mozda pobijedi
+                            make1PlayerView();
+                            playingBoard.updateView();
+                          }
+                      }
+                      else if(viewNow == 2){
+                          make2PlayerView();
+                          playingBoard.updateView();
+                      }
                   }
               }
             }
-            else if(trenutniView == 3){
+            else if(viewNow == 3){
                 // sada je na pauzi i moze se vratiti kuci ili na igru
                 if(homePressed(x1, y1)){
                   BSP_LCD_Clear(LCD_COLOR_DARKBLUE);
-                    prosliView = trenutniView;
-                    trenutniView = 0;
+                    pastView = viewNow;
+                    viewNow = 0;
                     playingBoard.makeTheBoard();
                     makeHomeView();
               }
                else if(ContinuePressed(x1, y1)){
                   BSP_LCD_Clear(LCD_COLOR_DARKBLUE);
-                    trenutniView = prosliView;
-                   if(trenutniView == 1)
+                    viewNow = pastView;
+                   if(viewNow == 1)
                         make1PlayerView();
                     else make2PlayerView();
                       playingBoard.updateView();
               }
               else if(RestartPressed(x1, y1)){
                   BSP_LCD_Clear(LCD_COLOR_DARKBLUE);
-                    trenutniView = prosliView;
+                    viewNow = pastView;
                     playingBoard.makeTheBoard();
-                   if(trenutniView == 1)
+                   if(viewNow == 1)
                         make1PlayerView();
                     else make2PlayerView();
               }
+            }
+            else if(viewNow == 4){
+                if(housePressed(x1,y1)){
+                    BSP_LCD_Clear(LCD_COLOR_DARKBLUE);
+                    pastView = 4;
+                    viewNow = 0;
+                    playingBoard.makeTheBoard();
+                    makeHomeView();
+                }
+                
             }
             wait_ms(10);
         }
